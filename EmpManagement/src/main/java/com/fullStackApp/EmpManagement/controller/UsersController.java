@@ -5,6 +5,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fullStackApp.EmpManagement.payload.LoginDto;
 import com.fullStackApp.EmpManagement.payload.UserDto;
 import com.fullStackApp.EmpManagement.service.UsersService;
 
@@ -24,6 +30,26 @@ public class UsersController {
 	
 	@Autowired
 	private UsersService usersService;
+	
+	@Autowired
+	private AuthenticationManager authenticationManager;
+	
+	public AuthenticationManager getAuthenticationManager() {
+		return authenticationManager;
+	}
+
+	public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+		this.authenticationManager = authenticationManager;
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<String> loginUser(
+		@RequestBody LoginDto loginDto){
+		Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		return new ResponseEntity<String>("User  Sucessfully Logged",HttpStatus.OK);
+	}
 	
 	@PostMapping("/register")
 	public ResponseEntity<UserDto> createUser(
