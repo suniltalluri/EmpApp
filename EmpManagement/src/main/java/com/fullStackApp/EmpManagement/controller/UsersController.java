@@ -1,4 +1,4 @@
-package com.fullStackApp.EmpManagement.controller;
+ package com.fullStackApp.EmpManagement.controller;
 
 import java.util.List;
 
@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fullStackApp.EmpManagement.payload.JwtAuthResponse;
 import com.fullStackApp.EmpManagement.payload.LoginDto;
 import com.fullStackApp.EmpManagement.payload.UserDto;
+import com.fullStackApp.EmpManagement.security.JwtTokenProveder;
 import com.fullStackApp.EmpManagement.service.UsersService;
 
 @RestController
@@ -28,12 +29,24 @@ import com.fullStackApp.EmpManagement.service.UsersService;
 @CrossOrigin(origins = "http://localhost:3000" )
 public class UsersController {
 	
+	
+	@Autowired
+	private JwtTokenProveder jwtTokenProveder;
+	
 	@Autowired
 	private UsersService usersService;
 	
 	@Autowired
 	private AuthenticationManager authenticationManager;
 	
+	public JwtTokenProveder getJwtTokenProveder() {
+		return jwtTokenProveder;
+	}
+
+	public void setJwtTokenProveder(JwtTokenProveder jwtTokenProveder) {
+		this.jwtTokenProveder = jwtTokenProveder;
+	}
+
 	public AuthenticationManager getAuthenticationManager() {
 		return authenticationManager;
 	}
@@ -43,12 +56,15 @@ public class UsersController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<String> loginUser(
+	public ResponseEntity<JwtAuthResponse> loginUser(
 		@RequestBody LoginDto loginDto){
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		return new ResponseEntity<String>("User  Sucessfully Logged",HttpStatus.OK);
+		System.out.println(authentication);
+		String token = jwtTokenProveder.generateToken(authentication);
+//		return new ResponseEntity<String>("User Logged",HttpStatus.OK);
+		return ResponseEntity.ok(new JwtAuthResponse(token));
 	}
 	
 	@PostMapping("/register")
